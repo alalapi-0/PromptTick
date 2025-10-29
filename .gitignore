@@ -1,0 +1,17 @@
+# venv
+.venv/
+venv/
+# py cache
+__pycache__/
+*.pyc
+
+# outputs & logs
+out/
+logs/
+
+# user data examples
+in_prompts/
+
+# OS artifacts
+.DS_Store
+Thumbs.db

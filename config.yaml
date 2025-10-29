@@ -1,0 +1,35 @@
+# === PromptTick 基础配置（Round 1） ===
+
+# 扫描节奏（下一轮才用到，这里先占位）
+interval_seconds: 300           # 每轮间隔秒数，示例值：5分钟
+batch_size: 1                   # 每轮处理文件个数上限（占位）
+
+# 文件过滤与排序
+file_extensions: [".txt", ".md"]  # 仅处理这些后缀（占位）
+ordering: "name"                 # name|mtime（占位）
+
+# 目录
+input_dir: "in_prompts"
+output_dir: "out"
+log_dir: "logs"
+state_path: "state.json"
+
+# 适配器选择（占位：下一轮才真正使用）
+adapter: "echo_adapter"
+
+# 日志级别（INFO/DEBUG）
+log_level: "INFO"
+
+# 预留的外部 API 区域（后续轮次使用）
+openai:
+  model: "gpt-4.1-mini"
+  temperature: 0.7
+  max_output_tokens: 800
+
+generic_http:
+  url: ""              # e.g. https://api.example.com/generate
+  method: "POST"
+  timeout: 60
+  headers: {}          # 支持未来的 ${ENV:KEY} 占位
+  body_template: ""    # 未来使用：可包含 ${PROMPT}
+  response_json_pointer: ""  # 未来使用：JSON Pointer 路径

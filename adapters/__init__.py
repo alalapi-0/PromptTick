@@ -6,11 +6,13 @@ from typing import Any
 from .base import BaseAdapter
 from .echo_adapter import EchoAdapter
 from .generic_http_adapter import GenericHTTPAdapter
+from .openai_adapter import OpenAIAdapter
 
 __all__ = [
     "BaseAdapter",
     "EchoAdapter",
     "GenericHTTPAdapter",
+    "OpenAIAdapter",
     "make_adapter",
 ]
 
@@ -36,5 +38,8 @@ def make_adapter(name: str, config: dict[str, Any]) -> BaseAdapter:
         if not isinstance(section, dict):
             raise ValueError("generic_http 配置必须为字典")
         return GenericHTTPAdapter(section)
+
+    if normalized == "openai_adapter":
+        return OpenAIAdapter(config)
 
     raise ValueError(f"未知适配器：{name}")

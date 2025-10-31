@@ -10,7 +10,7 @@
 - `main.py`：程序入口
 - `config.yaml`：基础配置文件
 - `state.json`：状态存储（已处理文件列表）
-- `adapters/`：适配器目录，当前提供 `echo_adapter`、`openai_adapter`、`generic_http_adapter`
+- `adapters/`：适配器目录，当前提供 `echo_adapter`、`openai_adapter`、`generic_http_adapter`、`local_stub_adapter`
 - `in_prompts/`：输入 Prompt 占位目录
 - `out/`：输出目录占位
 - `logs/`：日志目录，占位
@@ -151,6 +151,51 @@ generic_http:
 2. 在 `config.yaml` 中将 `generic_http.url` 改为 `http://127.0.0.1:8787/generate`
 3. 准备 Prompt 文件后运行 `python main.py --rescan --once`
 4. 期望输出以 `[MOCK]` 开头，日志展示调用信息且敏感头被打码。
+
+## 本地模型适配器占位（LocalStubAdapter）
+
+本适配器用于桥接本地命令行程序，不内置任何推理框架或权重，仅负责把 Prompt 写入临时文件、按配置渲染命令模板并执行。详见 [`ops/local_adapter_examples.md`](ops/local_adapter_examples.md)。
+
+### 核心特性
+- 支持 `engine: cmd | ollama | custom` 等样式配置，用于区分日志或后续扩展。
+- 命令模板可使用 `${PROMPT_PATH}`、`${MODEL}`、`${ARGS}`、`${OUT_PATH}` 四类占位符。
+- `output_mode` 支持 `stdout` 与 `file`：可直接读取标准输出，或让程序写入 `${OUT_PATH}` 后再读取。
+- 可配置工作目录、超时与环境变量映射，环境变量值可写 `${ENV:NAME}` 从系统环境继承。
+- 失败不会抛出异常，而是返回可读的错误文本（超时、退出码、缺失文件等）。
+
+### 配置示例
+
+```yaml
+adapter: "local_stub_adapter"
+local:
+  engine: "ollama"
+  model: "llama3:instruct"
+  timeout_seconds: 120
+  output_mode: "stdout"
+  command_template: >
+    ollama run ${MODEL} -p "$(cat ${PROMPT_PATH})"
+```
+
+Windows PowerShell 可使用：
+
+```yaml
+command_template: >
+  powershell -NoProfile -Command "$p = Get-Content -Raw '${PROMPT_PATH}'; ollama run ${MODEL} -p $p"
+output_mode: "stdout"
+```
+
+若目标程序仅支持文件输出，可参考脚本 [`scripts/fake_local_model.py`](scripts/fake_local_model.py)：
+
+```yaml
+output_mode: "file"
+command_template: >
+  python scripts/fake_local_model.py --in ${PROMPT_PATH} --out ${OUT_PATH}
+```
+
+### 调试与安全提示
+- 由于内部使用 `shell=True` 执行命令，请仅在受信任的目录中使用；生产环境建议自行加上白名单或更严格的转义策略。
+- 大 Prompt 建议改用 `output_mode: file`，避免命令行长度限制。
+- 启动调试可把 `log_level` 设置为 `DEBUG`，查看 `logs/run-YYYYMMDD.log` 了解执行命令、标准输出与错误输出的长度。
 
 ## 版本规划（Roadmap）
 1. Round 1：脚手架与配置、日志、自检（当前）

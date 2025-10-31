@@ -6,12 +6,14 @@ from typing import Any
 from .base import BaseAdapter
 from .echo_adapter import EchoAdapter
 from .generic_http_adapter import GenericHTTPAdapter
+from .local_stub_adapter import LocalStubAdapter
 from .openai_adapter import OpenAIAdapter
 
 __all__ = [
     "BaseAdapter",
     "EchoAdapter",
     "GenericHTTPAdapter",
+    "LocalStubAdapter",
     "OpenAIAdapter",
     "make_adapter",
 ]
@@ -32,6 +34,9 @@ def make_adapter(name: str, config: dict[str, Any]) -> BaseAdapter:
     normalized = (name or "").strip().lower()
     if normalized in {"", "echo_adapter"}:
         return EchoAdapter(config)
+
+    if normalized == "local_stub_adapter":
+        return LocalStubAdapter(config)
 
     if normalized == "generic_http_adapter":
         section = config.get("generic_http", {}) if isinstance(config, dict) else {}

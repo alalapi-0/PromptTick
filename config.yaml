@@ -41,3 +41,24 @@ generic_http:
     max_attempts: 3
     backoff_seconds: 1.0
     retry_on_status: [429, 500, 502, 503, 504]
+
+# 本地模型适配器占位（仅命令行桥接，无模型）
+local:
+  engine: "cmd"               # "cmd" | "ollama" | "custom"
+  model: "llama3:instruct"    # 用于模板替换；engine=ollama 时常用
+  timeout_seconds: 120        # 子进程超时，单位秒
+  workdir: ""                 # 可选：子进程工作目录，默认项目根目录
+
+  env:                        # 注入到子进程的环境变量，可用 ${ENV:VAR} 继承系统值
+    HF_HOME: "${ENV:HF_HOME}"
+
+  # 命令模板占位符：${PROMPT_PATH} / ${MODEL} / ${ARGS} / ${OUT_PATH}
+  command_template: >
+    ollama run ${MODEL} -p "$(cat ${PROMPT_PATH})"
+
+  # command_template: >
+  #   python scripts/fake_local_model.py --in ${PROMPT_PATH} --out ${OUT_PATH}
+
+  args: []                    # 可选的额外参数列表，最终拼接到模板后
+  output_mode: "stdout"       # "stdout" 或 "file"
+  out_suffix: ".out.txt"      # output_mode=file 时，输出文件的后缀名

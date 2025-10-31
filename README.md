@@ -20,6 +20,17 @@
 python main.py --once
 ```
 
+## 使用与运行（Round 2）
+- 单轮模式：`python main.py --once`，按配置处理一批文件后立即退出。
+- 定时模式：`python main.py`，持续轮询输入目录，每轮间隔 `config.yaml` 中的 `interval_seconds` 秒，可用 `Ctrl+C` 停止。
+- 重新扫描：`python main.py --rescan --once`，先清空 `state.json` 的已处理记录，再执行一轮处理。
+- 文件处理规则：
+  - 仅处理 `file_extensions` 列表中列出的扩展名（不区分大小写），并跳过 `.part` / `.lock` / `.tmp` 结尾的临时文件。
+  - `ordering: name` 采用自然排序（`001_foo` < `2_bar` < `10_baz`），`ordering: mtime` 按修改时间升序。
+  - 每轮最多处理 `batch_size` 个文件，读取内容后会去除首尾空白，空文件直接标记已处理并跳过生成。
+  - 生成输出写入 `output_dir`，文件名格式为 `YYYYMMDD-HHMMSS_<源文件名>.out.txt`。
+- 断点续跑：程序使用 `state.json` 记录已处理文件的绝对路径字符串。成功或被判定为空白的文件会加入 `processed` 列表；失败的文件不会记入，便于下一轮重试。
+
 ## 配置说明（Round 1）
 - `input_dir`、`output_dir`、`log_dir`、`state_path`：基础路径设置
 - `file_extensions`、`ordering`：文件过滤与排序占位

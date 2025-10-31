@@ -1,24 +1,40 @@
-"""
-Adapter factory (Round 1 placeholder).
+"""Adapter factory used by PromptTick."""
+from __future__ import annotations
 
-后续轮次会在此扩展：
-- openai_adapter
-- generic_http_adapter
-- local_stub_adapter
-"""
+from typing import Any
+
+from .base import BaseAdapter
 from .echo_adapter import EchoAdapter
+from .generic_http_adapter import GenericHTTPAdapter
 
-def make_adapter(name: str, config: dict):
-    """Return an adapter instance based on its name.
+__all__ = [
+    "BaseAdapter",
+    "EchoAdapter",
+    "GenericHTTPAdapter",
+    "make_adapter",
+]
+
+
+def make_adapter(name: str, config: dict[str, Any]) -> BaseAdapter:
+    """Return an adapter instance configured by *name* and *config*.
 
     Parameters
     ----------
     name:
-        Adapter identifier from configuration. Round 1 ignores this value and
-        always returns :class:`EchoAdapter`.
+        Adapter identifier from ``config.yaml``.
     config:
-        Adapter-specific configuration mapping. The placeholder adapter simply
-        stores it for later use.
+        Global configuration mapping. Adapter-specific sections are extracted
+        inside this factory.
     """
-    # Round 1: 占位返回 EchoAdapter；下一轮才接主流程
-    return EchoAdapter(config or {})
+
+    normalized = (name or "").strip().lower()
+    if normalized in {"", "echo_adapter"}:
+        return EchoAdapter(config)
+
+    if normalized == "generic_http_adapter":
+        section = config.get("generic_http", {}) if isinstance(config, dict) else {}
+        if not isinstance(section, dict):
+            raise ValueError("generic_http 配置必须为字典")
+        return GenericHTTPAdapter(section)
+
+    raise ValueError(f"未知适配器：{name}")

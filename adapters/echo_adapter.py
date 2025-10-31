@@ -1,25 +1,18 @@
-"""
-Echo adapter (Round 1 placeholder).
+"""Echo adapter used for smoke testing and debugging."""
+from __future__ import annotations
 
-本轮不参与实际调用，仅保留接口形状。
-"""
 from typing import Any
 
-class EchoAdapter:
-    """A minimal placeholder adapter that echoes prompts.
+from .base import BaseAdapter
 
-    Parameters
-    ----------
-    config:
-        Adapter-specific configuration mapping. Stored for future use.
-    """
+
+class EchoAdapter(BaseAdapter):
+    """A minimal adapter that echoes prompts for end-to-end testing."""
 
     def __init__(self, config: dict[str, Any] | None = None):
-        self.config = config or {}
+        super().__init__(config)
 
     def generate(self, prompt_text: str) -> str:
-        """
-        未来接口：接收 prompt 文本，返回生成文本。
-        Round 1 不会被 main.py 调用。
-        """
-        return f"[ECHO PLACEHOLDER]\\n\\nPROMPT:\\n{prompt_text}"
+        """Return the input prompt with a fixed prefix for observability."""
+
+        return f"[ECHO PLACEHOLDER]\n\nPROMPT:\n{prompt_text}"

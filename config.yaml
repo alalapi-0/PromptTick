@@ -25,6 +25,10 @@ openai:
   model: "gpt-4.1-mini"
   temperature: 0.7
   max_output_tokens: 800
+  system_prompt: null         # 可选系统提示词，null 表示不使用
+  extra_headers: {}           # 追加请求头，可留空；值会自动转为字符串
+  max_attempts: 3             # 限流/5xx 时的最大重试次数
+  base_backoff: 1.0           # 指数退避的初始等待秒数
 
 generic_http:
   url: ""              # e.g. https://api.example.com/generate

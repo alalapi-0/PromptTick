@@ -10,7 +10,7 @@
 - `main.py`：程序入口
 - `config.yaml`：基础配置文件
 - `state.json`：状态存储（已处理文件列表）
-- `adapters/`：适配器目录，当前提供 `echo_adapter`
+- `adapters/`：适配器目录，当前提供 `echo_adapter`、`openai_adapter`、`generic_http_adapter`
 - `in_prompts/`：输入 Prompt 占位目录
 - `out/`：输出目录占位
 - `logs/`：日志目录，占位
@@ -37,6 +37,47 @@ python main.py --once
 - `adapter`：适配器名称占位
 - `log_level`：日志级别（INFO/DEBUG）
 - `openai`、`generic_http`：未来外部服务配置占位
+
+## OpenAI 适配器（openai_adapter）
+
+### 依赖安装
+```bash
+pip install openai>=1.0.0
+```
+
+### 环境变量
+- PowerShell
+  ```powershell
+  $env:OPENAI_API_KEY="sk-..."
+  ```
+- Bash / zsh
+  ```bash
+  export OPENAI_API_KEY="sk-..."
+  ```
+
+### 配置示例
+在 `config.yaml` 中将适配器设置为 `openai_adapter`，并补充 `openai` 段：
+
+```yaml
+adapter: "openai_adapter"
+openai:
+  model: "gpt-4.1-mini"
+  temperature: 0.7
+  max_output_tokens: 800
+  system_prompt: "You are a helpful assistant."
+  extra_headers: {}
+  max_attempts: 3
+  base_backoff: 1.0
+```
+
+`extra_headers` 可选，用于追加自定义请求头（例如 `OpenAI-Beta` 实验标志），数值会被自动转为字符串。`max_attempts` 与 `base_backoff` 控制限流/5xx 时的指数回退策略，若服务返回 `Retry-After` 会优先遵循。
+
+### 常见错误
+- `ERROR: OPENAI_API_KEY not set in environment.`：未正确设置环境变量。
+- 429 或 5xx：SDK 会自动重试，日志会提示等待时间；若持续失败，请检查额度或稍后再试。
+- 上下文过长：减少 Prompt 大小或调低 `max_output_tokens`。
+
+> ⚠️ 请勿在仓库中硬编码密钥或将 `state.json` 上传至公共环境。
 
 ## 通用 HTTP 适配器（generic_http_adapter）
 

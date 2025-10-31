@@ -14,8 +14,8 @@ output_dir: "out"
 log_dir: "logs"
 state_path: "state.json"
 
-# 适配器选择（占位：下一轮才真正使用）
-adapter: "echo_adapter"
+# 适配器选择
+adapter: "echo_adapter"          # 可切换为 generic_http_adapter
 
 # 日志级别（INFO/DEBUG）
 log_level: "INFO"
@@ -30,6 +30,10 @@ generic_http:
   url: ""              # e.g. https://api.example.com/generate
   method: "POST"
   timeout: 60
-  headers: {}          # 支持未来的 ${ENV:KEY} 占位
-  body_template: ""    # 未来使用：可包含 ${PROMPT}
-  response_json_pointer: ""  # 未来使用：JSON Pointer 路径
+  headers: {}          # 支持 ${ENV:KEY} 占位；示例：Authorization: "Bearer ${ENV:API_TOKEN}"
+  body_template: ""    # 示例：{"prompt": "${PROMPT}"}
+  response_json_pointer: ""  # 示例：/data/text
+  retries:
+    max_attempts: 3
+    backoff_seconds: 1.0
+    retry_on_status: [429, 500, 502, 503, 504]

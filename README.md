@@ -38,6 +38,56 @@ python main.py --once
 - `log_level`：日志级别（INFO/DEBUG）
 - `openai`、`generic_http`：未来外部服务配置占位
 
+## 通用 HTTP 适配器（generic_http_adapter）
+
+### 依赖准备
+```bash
+pip install httpx
+```
+
+### 快速配置示例
+将 `config.yaml` 中的 `adapter` 设置为 `generic_http_adapter`，并补充 `generic_http` 段：
+
+```yaml
+adapter: "generic_http_adapter"
+generic_http:
+  url: "https://api.example.com/generate"
+  method: "POST"
+  timeout: 60
+  headers:
+    Authorization: "Bearer ${ENV:THIRD_PARTY_API_KEY}"
+    Content-Type: "application/json"
+  body_template: |
+    {
+      "prompt": "${PROMPT}",
+      "params": {"temperature": 0.7, "max_tokens": 800}
+    }
+  response_json_pointer: "/data/text"
+  retries:
+    max_attempts: 3
+    backoff_seconds: 1.0
+    retry_on_status: [429, 500, 502, 503, 504]
+```
+
+### 字段说明
+- `url` / `method` / `timeout`：目标接口地址、HTTP 方法与超时（秒）。
+- `headers`：HTTP 头模板，支持 `${ENV:VAR}` 占位符在加载时替换环境变量。
+- `body_template`：请求体模板，先进行环境变量替换，再用 `${PROMPT}` 注入实际 prompt 文本。
+- `response_json_pointer`：返回 JSON 中目标字段的 JSON Pointer 路径（如 `/choices/0/message/content`）。
+- `retries.max_attempts` / `backoff_seconds` / `retry_on_status`：重试次数、指数退避初始等待（秒）与触发重试的 HTTP 状态码列表。
+
+当 `Content-Type` 为 `application/json`（忽略大小写及可选 charset）时，`body_template` 会被解析为 JSON 对象发送；否则作为原始文本发送。
+
+### 安全与日志
+- 日志仅会打印打码后的敏感头（如 `Authorization: Bearer ***`），不要把密钥写进仓库。
+- 所有异常（网络失败、JSON 解析错误、环境变量缺失等）都会返回可读的错误文本并写入输出文件，便于排查。
+
+### 本地自测（可选）
+1. 启动本地 mock：`python scripts/mock_http_echo.py`
+2. 在 `config.yaml` 中将 `generic_http.url` 改为 `http://127.0.0.1:8787/generate`
+3. 准备 Prompt 文件后运行 `python main.py --rescan --once`
+4. 期望输出以 `[MOCK]` 开头，日志展示调用信息且敏感头被打码。
+
 ## 版本规划（Roadmap）
 1. Round 1：脚手架与配置、日志、自检（当前）
 2. Round 2：定时循环与批处理、适配器调用

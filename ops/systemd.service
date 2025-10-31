@@ -1,0 +1,15 @@
+[Unit]
+Description=PromptTick Service
+After=network.target
+
+[Service]
+Type=simple
+User=YOUR_USERNAME
+WorkingDirectory=/home/YOUR_USERNAME/PromptTick
+ExecStart=/usr/bin/python3 /home/YOUR_USERNAME/PromptTick/main.py --once --config config.yaml
+# 每次只跑一轮，建议配合 systemd timer 或 cron；若要常驻循环，请改为不带 --once
+Restart=on-failure
+Environment=OPENAI_API_KEY=changeme
+
+[Install]
+WantedBy=multi-user.target

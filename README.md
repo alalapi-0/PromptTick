@@ -29,7 +29,30 @@ python main.py --once
   - `ordering: name` 采用自然排序（`001_foo` < `2_bar` < `10_baz`），`ordering: mtime` 按修改时间升序。
   - 每轮最多处理 `batch_size` 个文件，读取内容后会去除首尾空白，空文件直接标记已处理并跳过生成。
   - 生成输出写入 `output_dir`，文件名格式为 `YYYYMMDD-HHMMSS_<源文件名>.out.txt`。
-- 断点续跑：程序使用 `state.json` 记录已处理文件的绝对路径字符串。成功或被判定为空白的文件会加入 `processed` 列表；失败的文件不会记入，便于下一轮重试。
+  - 断点续跑：程序使用 `state.json` 记录已处理文件的绝对路径字符串。成功或被判定为空白的文件会加入 `processed` 列表；失败的文件不会记入，便于下一轮重试。
+
+## 部署与运维（Round 5）
+
+### CLI 预演与处理上限
+- `--dry-run`：仅列出本轮将要处理的文件与目标适配器，不会调用适配器、写输出或修改 `state.json`。常用于部署前检查过滤规则是否正确。
+- `--limit N`：限制本轮最多处理的文件数，与配置中的 `batch_size` 取最小值。
+
+示例：
+
+```bash
+python main.py --dry-run
+python main.py --dry-run --limit 3
+python main.py --once --limit 2
+```
+
+### 日志管理
+- 日志级别可在 `config.yaml` 的 `log_level` 中配置（如 `INFO`、`DEBUG`）。
+- 每日日志写入 `logs/run-YYYYMMDD.log`，同一天的多次运行会追加到同一个文件，控制台仍输出相同信息。
+
+### 推荐的定时运行方式
+- **Windows 任务计划程序**：参见 [`ops/windows_task_schd.md`](ops/windows_task_schd.md)，提供图形界面步骤与 XML 导入模板。
+- **Linux systemd**：参见示例服务文件 [`ops/systemd.service`](ops/systemd.service) 与使用指南 [`ops/systemd.md`](ops/systemd.md)。
+- **Linux cron**：参见 [`ops/cron.md`](ops/cron.md) 中的 crontab 与 `flock` 防重入示例。
 
 ## 配置说明（Round 1）
 - `input_dir`、`output_dir`、`log_dir`、`state_path`：基础路径设置
